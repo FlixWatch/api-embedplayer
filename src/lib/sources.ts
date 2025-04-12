@@ -37,14 +37,14 @@ export interface MediaSources {
 // Define the sources grouped by type
 export const movieSources: Source[] = [
   { name: 'VidSrc', url: 'https://vidsrc.xyz/embed/movie/{id}', category: 'movie' },
-  { name: 'VidLink', url: 'https://vidlink.pro/movie/{tmdbId}?primaryColor=ff0000&secondaryColor=000000&iconColor=b40e0e&icons=default&player=default&title=true&poster=true&autoplay=false&nextbutton=true', category: 'movie' },
+  { name: 'VidLink', url: 'https://vidlink.pro/movie/{tmdbId}', category: 'movie' },
   { name: 'LetsEmbed', url: 'https://letsembed.cc/embed/movie/?id={tmdbId}', category: 'movie' },
   { name: 'iBomma', url: 'https://play.vidplay.watch/movie/{tmdbId}', category: 'movie' }
 ];
 
 export const tvSources: Source[] = [
   { name: 'VidSrc', url: 'https://vidsrc.xyz/embed/tv/{id}/{season}-{episode}', category: 'tv' },
-  { name: 'VidLink', url: 'https://vidlink.pro/tv/{tmdbId}/{season}/{episode}?primaryColor=ff0000&secondaryColor=000000&iconColor=b40e0e&icons=default&player=default&title=true&poster=true&autoplay=false&nextbutton=true', category: 'tv' },
+  { name: 'VidLink', url: 'https://vidlink.pro/tv/{tmdbId}/{season}/{episode}', category: 'tv' },
   { name: 'LetsEmbed', url: 'https://letsembed.cc/embed/tv/?id={tmdbId}/{season}/{episode}', category: 'tv' },
   { name: 'iBomma', url: 'https://play.vidplay.watch/tv/{tmdbId}/{season}-{episode}', category: 'tv' }
 ];
