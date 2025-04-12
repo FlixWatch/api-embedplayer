@@ -1,9 +1,0 @@
-{
-  "build": {
-    "command": "npm install && npm run build",
-    "directory": ".next",
-    "environment": {
-      "NODE_VERSION": "18.17.0"
-    }
-  }
-} 
