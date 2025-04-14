@@ -38,7 +38,18 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
   }, [sources]);
 
   return (
-    <div className="player-container">
+    <div 
+      className="player-container"
+      style={{
+        backgroundImage: !selectedSource ? `url('/images/backdrop.png')` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative'
+      }}
+    >
+      {!selectedSource && (
+        <div className="backdrop-overlay"></div>
+      )}
       <div className="player-info">
         <h2 className="media-title">{title}</h2>
         {details && <div className="media-details">{details}</div>}
@@ -71,6 +82,7 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
           mediaType={mediaType}
           onSourceSelect={handleSourceSelect}
           onClose={handleClosePopup}
+          mediaId={details?.split(' | ')[1]}
         />
       )}
     </div>
