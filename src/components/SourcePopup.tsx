@@ -10,6 +10,7 @@ interface SourcePopupProps {
   onSourceSelect: (url: string) => void;
   onClose: () => void;
   mediaId?: string;
+  isInitialView?: boolean;
 }
 
 export default function SourcePopup({ 
@@ -18,7 +19,8 @@ export default function SourcePopup({
   mediaType, 
   onSourceSelect, 
   onClose,
-  mediaId
+  mediaId,
+  isInitialView = true
 }: SourcePopupProps) {
   const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
   const [selectedServer, setSelectedServer] = useState<number | null>(null);
@@ -87,11 +89,14 @@ export default function SourcePopup({
     }}>
       <div className="backdrop-overlay"></div>
       <div className="source-popup-content">
-        <button 
-          className="close-icon" 
-          onClick={onClose}
-          aria-label="Close"
-        />
+        {/* Only show close button if not initial view */}
+        {!isInitialView && (
+          <button 
+            className="close-icon" 
+            onClick={onClose}
+            aria-label="Close"
+          />
+        )}
         <h3>Select Server</h3>
         <p className="source-description">
           Choose the server, which is working for you according to your need.
@@ -109,9 +114,12 @@ export default function SourcePopup({
           ))}
         </div>
         <div className="source-actions">
-          <button className="action-button cancel-button" onClick={onClose}>
-            Cancel
-          </button>
+          {/* Only show cancel button if not initial view */}
+          {!isInitialView && (
+            <button className="action-button cancel-button" onClick={onClose}>
+              Cancel
+            </button>
+          )}
           <button 
             className="action-button play-button"
             onClick={() => {
@@ -119,6 +127,7 @@ export default function SourcePopup({
                 onSourceSelect(displaySources[selectedServer].url);
               }
             }}
+            style={{ marginLeft: isInitialView ? 'auto' : '0' }}
           >
             Play Now <span className="play-icon">▶</span>
           </button>

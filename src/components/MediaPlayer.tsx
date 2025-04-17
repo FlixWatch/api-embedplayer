@@ -14,6 +14,7 @@ interface MediaPlayerProps {
 export default function MediaPlayer({ title, details, sources, mediaType }: MediaPlayerProps) {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(true);
+  const [isInitialView, setIsInitialView] = useState(true);
 
   const handleSourceSelect = (url: string) => {
     setSelectedSource(url);
@@ -21,6 +22,7 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
   };
 
   const handleChangeServer = () => {
+    setIsInitialView(false); // Not the initial view when changing server
     setShowPopup(true);
   };
   
@@ -35,6 +37,7 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
   useEffect(() => {
     setShowPopup(true);
     setSelectedSource(null);
+    setIsInitialView(true); // Reset to initial view when sources change
   }, [sources]);
 
   return (
@@ -83,6 +86,7 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
           onSourceSelect={handleSourceSelect}
           onClose={handleClosePopup}
           mediaId={details?.split(' | ')[1]}
+          isInitialView={isInitialView}
         />
       )}
     </div>
