@@ -87,6 +87,7 @@ export default function MediaPlayer({ title, details, sources, mediaType }: Medi
           onClose={handleClosePopup}
           mediaId={details?.split(' | ')[1]}
           isInitialView={isInitialView}
+          currentSourceUrl={selectedSource}
         />
       )}
     </div>

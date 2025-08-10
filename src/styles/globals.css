@@ -186,36 +186,35 @@ main {
 }
 
 .source-list {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.75rem;
   margin-bottom: 2rem;
-  flex-wrap: nowrap;
   width: 100%;
+  align-items: stretch;
 }
 
 .source-option {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.75rem 2rem 0.75rem 1rem;
+  padding: 0.75rem 2.25rem 0.75rem 1rem; /* extra right space for check icon */
   background-color: #1a232c;
   color: var(--white);
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem);
   transition: all 0.2s ease;
   font-weight: 500;
   letter-spacing: 0.5px;
-  flex: 1;
   min-width: 0;
   position: relative;
-  overflow: hidden;
-  white-space: nowrap;
+  overflow: hidden; /* keep pill shape */
+  white-space: nowrap; /* single line with ellipsis */
   text-overflow: ellipsis;
   font-family: var(--font-family);
+  max-width: 100%;
 }
 
 .source-option:hover {
@@ -224,7 +223,7 @@ main {
 }
 
 .selected-source {
-  background-color: rgba(255, 193, 7, 0.25) !important;
+  background-color: rgba(255, 193, 7, 0.18) !important;
   border: 1px solid #ffc107 !important;
   color: #ffc107 !important;
   box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
@@ -400,9 +399,8 @@ main {
   }
   
   .source-option {
-    width: calc(50% - 0.5rem);
-    flex: 0 0 auto;
-    padding: 0.75rem 2rem 0.75rem 1rem;
+    width: 100%;
+    padding: 0.75rem 2.25rem 0.75rem 1rem; /* match main padding, keep room for check icon */
     text-align: center;
   }
 
@@ -558,17 +556,19 @@ main {
 
 .check-icon {
   position: absolute;
-  right: 10px;
-  font-size: 0.8rem;
-  font-weight: bold;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  font-weight: 700;
   background-color: #ffc107;
   color: #000;
-  border-radius: 50%;
+  border-radius: 999px;
   width: 18px;
   height: 18px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  margin-left: 10px;
-} 
+  pointer-events: none; /* prevent blocking clicks */
+}

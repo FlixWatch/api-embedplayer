@@ -11,6 +11,7 @@ interface SourcePopupProps {
   onClose: () => void;
   mediaId?: string;
   isInitialView?: boolean;
+  currentSourceUrl?: string; // currently playing URL to preselect on reopen
 }
 
 export default function SourcePopup({ 
@@ -20,47 +21,50 @@ export default function SourcePopup({
   onSourceSelect, 
   onClose,
   mediaId,
-  isInitialView = true
+  isInitialView = true,
+  currentSourceUrl
 }: SourcePopupProps) {
   const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
   const [selectedServer, setSelectedServer] = useState<number | null>(null);
   
+  // Attempt to fetch backdrop from TMDB (demo path kept)
   useEffect(() => {
-    // Set the first server as selected by default
-    if (sources.length > 0) {
-      setSelectedServer(0);
-    }
-    
-    // Attempt to fetch backdrop from TMDB
     const fetchBackdrop = async () => {
       if (!mediaId) return;
-      
       try {
-        // Extract TMDB ID - if it starts with 'tt', it's an IMDB ID and we need to convert
         let tmdbId = mediaId;
         if (mediaId.startsWith('tt')) {
-          // This is just a simple check - in a real app, you'd have a proper mapping
-          // Assume the TMDB ID is already available in the sources
           if (sources.length > 0 && sources[0].url) {
-            // Try to extract from URL (this is just an example approach)
             const match = sources[0].url.match(/\/(\d+)/);
             if (match && match[1]) {
               tmdbId = match[1];
             }
           }
         }
-        
-        // For testing/demo purposes, use a known backdrop path
-        // In production, you'd want to call the TMDB API to get the correct backdrop path
         const backdropPath = `/xRyW60TXvX7Q2HSbpz8nZJGLZ6H.jpg`;
         setBackdropUrl(backdropPath);
       } catch (error) {
         console.error('Error fetching backdrop:', error);
       }
     };
-    
     fetchBackdrop();
   }, [mediaId, sources]);
+
+  // Preselect the server that matches the currently playing URL when popup opens
+  useEffect(() => {
+    if (!sources || sources.length === 0) return;
+    // Build the same list that is rendered below to keep indices aligned
+    const movieSources = sources.filter(s => s.category === 'movie' || !s.category);
+    const tvSources = sources.filter(s => s.category === 'tv' || !s.category);
+    const relevant = mediaType === 'movie' ? movieSources : tvSources;
+    const list = relevant.length > 0 ? relevant : sources;
+
+    const idx = currentSourceUrl
+      ? list.findIndex((s) => s.url === currentSourceUrl)
+      : -1;
+
+    setSelectedServer(idx >= 0 ? idx : 0);
+  }, [currentSourceUrl, sources, mediaType]);
 
   if (!sources || sources.length === 0) {
     return null;
