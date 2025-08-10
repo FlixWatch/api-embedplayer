@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="referrer" content="origin" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedded Player Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-color: #e53935;
+      --primary-dark: #c62828;
+      --black: #121212;
+      --dark-surface: #1e1e1e;
+      --grey: #333333;
+      --light-grey: rgba(255, 255, 255, 0.12);
+      --white: #ffffff;
+    }
+    
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      line-height: 1.6;
+      color: var(--white);
+      background-color: var(--black);
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+    
+    .header {
+      display: none; /* Hide the header/title */
+    }
+    
+    .player {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+    
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    /* Change server button */
+    .change-server-btn {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary-color);
+      color: var(--white);
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 10;
+      text-transform: uppercase;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      opacity: 0.2;
+      transition: opacity 0.3s ease, background-color 0.2s ease, transform 0.2s ease;
+    }
+    
+    .change-server-btn:hover {
+      opacity: 1;
+      background-color: var(--primary-dark);
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+    
+    .popup-content {
+      background-color: var(--dark-surface);
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    
+    .popup h2 {
+      margin-bottom: 1.5rem;
+      color: var(--white);
+      font-weight: 400;
+    }
+    
+    .sources {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    
+    .source-button {
+      padding: 0.75rem 1.5rem;
+      background-color: var(--primary-color);
+      color: var(--white);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    .source-button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* X icon close button */
+    .close-icon {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+      border: none;
+      padding: 0;
+      z-index: 10;
+    }
+    
+    .close-icon:hover {
+      background-color: var(--primary-dark);
+      transform: scale(1.1);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .close-icon::before,
+    .close-icon::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 2px;
+      background-color: var(--white);
+      transform-origin: center;
+    }
+    
+    .close-icon::before {
+      transform: rotate(45deg);
+    }
+    
+    .close-icon::after {
+      transform: rotate(-45deg);
+    }
+    
+    /* Loading spinner */
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Material design ripple effect */
+    @keyframes ripple {
+      to {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+    
+    .source-button::after,
+    .change-server-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 1;
+    }
+    
+    .source-button:active::after,
+    .change-server-btn:active::after {
+      animation: ripple 0.5s linear;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .popup-content {
+        padding: 1.5rem;
+        width: 95%;
+      }
+      
+      .sources {
+        flex-direction: column;
+      }
+      
+      .source-button {
+        width: 100%;
+        padding: 1rem;
+      }
+      
+      .change-server-btn {
+        font-size: 0.7rem;
+        padding: 6px 12px;
+      }
+      
+      .close-icon {
+        width: 30px;
+        height: 30px;
+        top: -12px;
+        right: -12px;
+      }
+      
+      .close-icon::before,
+      .close-icon::after {
+        width: 14px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .popup-content {
+        padding: 1.25rem;
+      }
+      
+      .popup h2 {
+        font-size: 1.1rem;
+      }
+      
+      .source-button {
+        font-size: 0.9rem;
+        padding: 0.85rem;
+      }
+      
+      .change-server-btn {
+        font-size: 0.7rem;
+        padding: 5px 10px;
+        top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="title">Movie Title</h1>
+      <div id="details">Movie details</div>
+    </div>
+    <div class="player" id="player-container">
+      <!-- iframe will be inserted here -->
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="popup" id="source-popup">
+    <div class="popup-content">
+      <h2>Select Source</h2>
+      <div class="sources" id="sources-list">
+        <!-- source buttons will be added here -->
+      </div>
+      <!-- X icon close button will be added here if player is active -->
+    </div>
+  </div>
+  
+  <script>
+    // Simple simulation of the app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get parameters from URL
+      const params = new URLSearchParams(window.location.search);
+      let id = params.get('id') || 'tt0111161';
+      let type = params.get('type') || 'movie';
+      let season = params.get('season');
+      let episode = params.get('episode');
+      
+      // Determine if it's a movie or TV show
+      const isMovie = type === 'movie';
+      const isImdb = id.startsWith('tt');
+      
+      // Keep track of current source
+      let currentSource = null;
+      
+      // Define sources for movies and TV shows
+      const movieSources = [
+        { name: 'VidSrc', url: isImdb ? 
+          `https://vidsrc.xyz/embed/movie/${id}` : 
+          `https://vidsrc.xyz/embed/movie/${id}` 
+        },
+        { name: 'VidLink', url: 
+          `https://vidlink.pro/movie/${isImdb ? '278' : id}` 
+        },
+        { name: 'VidPlay', url: 
+          `https://vidplay.site/e/movie/${isImdb ? id : 'tt0111161'}` 
+        },
+        { name: 'SuperEmbed', url: 
+          `https://multiembed.mov/directstream.php?video_id=${isImdb ? id : 'tt0111161'}&tmdb=${isImdb ? '278' : id}` 
+        }
+      ];
+      
+      const tvSources = [
+        { name: 'VidSrc', url: 
+          `https://vidsrc.xyz/embed/tv/${id}/${season || '1'}-${episode || '1'}` 
+        },
+        { name: 'VidLink', url: 
+          `https://vidlink.pro/tv/${isImdb ? '1399' : id}/${season || '1'}/${episode || '1'}` 
+        },
+        { name: 'VidPlay', url: 
+          `https://vidplay.site/e/tv/${isImdb ? id : 'tt0944947'}/${season || '1'}/${episode || '1'}` 
+        },
+        { name: 'SuperEmbed', url: 
+          `https://multiembed.mov/directstream.php?video_id=${isImdb ? id : 'tt0944947'}&s=${season || '1'}&e=${episode || '1'}` 
+        }
+      ];
+      
+      // Select appropriate sources based on media type
+      const sources = isMovie ? movieSources : tvSources;
+      
+      // Create source buttons
+      const sourcesList = document.getElementById('sources-list');
+      const sourcePopup = document.getElementById('source-popup');
+      const popupContent = sourcePopup.querySelector('.popup-content');
+      
+      // Add source buttons
+      sources.forEach(source => {
+        const sourceBtn = document.createElement('button');
+        sourceBtn.className = 'source-button';
+        sourceBtn.textContent = source.name;
+        sourceBtn.addEventListener('click', function() {
+          loadPlayer(source.url);
+        });
+        sourcesList.appendChild(sourceBtn);
+      });
+      
+      // Function to show popup with close button if needed
+      function showPopup() {
+        sourcePopup.style.display = 'flex';
+        
+        // Remove any existing close icon
+        const existingCloseIcon = popupContent.querySelector('.close-icon');
+        if (existingCloseIcon) {
+          existingCloseIcon.remove();
+        }
+        
+        // Add close icon if we have a current source
+        if (currentSource) {
+          const closeIcon = document.createElement('button');
+          closeIcon.className = 'close-icon';
+          closeIcon.setAttribute('aria-label', 'Close');
+          closeIcon.addEventListener('click', function() {
+            sourcePopup.style.display = 'none';
+          });
+          popupContent.appendChild(closeIcon);
+        }
+      }
+      
+      // Function to load the player
+      function loadPlayer(url) {
+        const playerContainer = document.getElementById('player-container');
+        const loading = document.getElementById('loading');
+        
+        // Update current source
+        currentSource = url;
+        
+        // Hide loading
+        if (loading) {
+          loading.style.display = 'none';
+        }
+        
+        // Create iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.allowFullscreen = true;
+        
+        // Create change server button
+        const changeServerBtn = document.createElement('button');
+        changeServerBtn.className = 'change-server-btn';
+        changeServerBtn.textContent = 'Change Server';
+        changeServerBtn.addEventListener('click', function() {
+          showPopup();
+        });
+        
+        // Clear container and add iframe and change server button
+        playerContainer.innerHTML = '';
+        playerContainer.appendChild(iframe);
+        playerContainer.appendChild(changeServerBtn);
+        
+        // Hide popup
+        sourcePopup.style.display = 'none';
+      }
+      
+      // Initial call to show popup
+      showPopup();
+    });
+  </script>
+</body>
+</html> 

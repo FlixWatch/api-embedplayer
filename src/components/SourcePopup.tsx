@@ -1,0 +1,142 @@
+'use client';
+
+import { Source } from '@/lib/sources';
+import { useEffect, useState } from 'react';
+
+interface SourcePopupProps {
+  title: string;
+  sources: Source[];
+  mediaType: 'movie' | 'tv';
+  onSourceSelect: (url: string) => void;
+  onClose: () => void;
+  mediaId?: string;
+  isInitialView?: boolean;
+  currentSourceUrl?: string; // currently playing URL to preselect on reopen
+}
+
+export default function SourcePopup({ 
+  title, 
+  sources, 
+  mediaType, 
+  onSourceSelect, 
+  onClose,
+  mediaId,
+  isInitialView = true,
+  currentSourceUrl
+}: SourcePopupProps) {
+  const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
+  const [selectedServer, setSelectedServer] = useState<number | null>(null);
+  
+  // Attempt to fetch backdrop from TMDB (demo path kept)
+  useEffect(() => {
+    const fetchBackdrop = async () => {
+      if (!mediaId) return;
+      try {
+        let tmdbId = mediaId;
+        if (mediaId.startsWith('tt')) {
+          if (sources.length > 0 && sources[0].url) {
+            const match = sources[0].url.match(/\/(\d+)/);
+            if (match && match[1]) {
+              tmdbId = match[1];
+            }
+          }
+        }
+        const backdropPath = `/xRyW60TXvX7Q2HSbpz8nZJGLZ6H.jpg`;
+        setBackdropUrl(backdropPath);
+      } catch (error) {
+        console.error('Error fetching backdrop:', error);
+      }
+    };
+    fetchBackdrop();
+  }, [mediaId, sources]);
+
+  // Preselect the server that matches the currently playing URL when popup opens
+  useEffect(() => {
+    if (!sources || sources.length === 0) return;
+    // Build the same list that is rendered below to keep indices aligned
+    const movieSources = sources.filter(s => s.category === 'movie' || !s.category);
+    const tvSources = sources.filter(s => s.category === 'tv' || !s.category);
+    const relevant = mediaType === 'movie' ? movieSources : tvSources;
+    const list = relevant.length > 0 ? relevant : sources;
+
+    const idx = currentSourceUrl
+      ? list.findIndex((s) => s.url === currentSourceUrl)
+      : -1;
+
+    setSelectedServer(idx >= 0 ? idx : 0);
+  }, [currentSourceUrl, sources, mediaType]);
+
+  if (!sources || sources.length === 0) {
+    return null;
+  }
+
+  // Group sources by category
+  const movieSources = sources.filter(source => source.category === 'movie' || !source.category);
+  const tvSources = sources.filter(source => source.category === 'tv' || !source.category);
+  
+  // Use appropriate sources based on media type
+  const relevantSources = mediaType === 'movie' ? movieSources : tvSources;
+  const displaySources = relevantSources.length > 0 ? relevantSources : sources;
+
+  const handleServerSelect = (index: number) => {
+    setSelectedServer(index);
+    // Remove the immediate play functionality
+    // Only select the server, don't play until "Play Now" is clicked
+  };
+
+  return (
+    <div className="source-popup" style={{
+      backgroundImage: backdropUrl ? `url(https://image.tmdb.org/t/p/w1280${backdropUrl})` : 'none',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
+      <div className="backdrop-overlay"></div>
+      <div className="source-popup-content">
+        {/* Only show close button if not initial view */}
+        {!isInitialView && (
+          <button 
+            className="close-icon" 
+            onClick={onClose}
+            aria-label="Close"
+          />
+        )}
+        <h3>Select Server</h3>
+        <p className="source-description">
+          Choose the server, which is working for you according to your need.
+        </p>
+        <div className="source-list">
+          {displaySources.map((source, index) => (
+            <button
+              key={index}
+              className={`source-option ${selectedServer === index ? 'selected-source' : ''}`}
+              onClick={() => handleServerSelect(index)}
+            >
+              {source.name}
+              {selectedServer === index && <span className="check-icon">✓</span>}
+            </button>
+          ))}
+        </div>
+        <div className="source-actions">
+          {/* Only show cancel button if not initial view */}
+          {!isInitialView && (
+            <button className="action-button cancel-button" onClick={onClose}>
+              Cancel
+            </button>
+          )}
+          <button 
+            className="action-button play-button"
+            onClick={() => {
+              if (selectedServer !== null && displaySources[selectedServer]) {
+                onSourceSelect(displaySources[selectedServer].url);
+              }
+            }}
+            style={{ marginLeft: isInitialView ? 'auto' : '0' }}
+          >
+            Play Now <span className="play-icon">▶</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+} 
